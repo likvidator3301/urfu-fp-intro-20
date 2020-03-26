@@ -427,9 +427,9 @@ zipMaybe a b = case (a, b) of
 -}
 adopt :: AnimalWithType -> Either String AdoptedAnimal
 adopt animal = case animal of
-  (AnimalWithType age name Cat) -> if age < 5 && head name /= 'D' Right (AdoptedAnimal animal) else Left "Can't adopt cat"
-  (AnimalWithType age _ Dog) -> if age > 1 Right (AdoptedAnimal animal) else Left "Can't adopt dog"
-  (AnimalWithType _ name Duck) -> if name == "Daisy" Right (AdoptedAnimal animal) else Left "Quack"
+  (AnimalWithType age name Cat) -> if age < 5 && head name /= 'D' then Right (AdoptedAnimal animal) else Left "Can't adopt cat"
+  (AnimalWithType age _ Dog) -> if age > 1 then Right (AdoptedAnimal animal) else Left "Can't adopt dog"
+  (AnimalWithType _ name Duck) -> if name == "Daisy" then Right (AdoptedAnimal animal) else Left "Quack"
   (AnimalWithType _ _ Lion) -> Left "Can't adopt lions :("
 
 -- </Задачи для самостоятельного решения>
