@@ -388,7 +388,7 @@ uncons l = case l of
   - zipMaybe (Just "hey") (Just 2) ~> Just ("hey", 2)
 -}
 zipMaybe :: Maybe a -> Maybe b -> Maybe (a, b)
-zipMaybe a b = case (a, b)
+zipMaybe a b = case (a, b) of
   (Nothing, _) -> Nothing
   (_, Nothing) -> Nothing
   (Just a, Just b) -> Just(a, b)
@@ -426,7 +426,7 @@ zipMaybe a b = case (a, b)
       - сообщать "Can't adopt lions :("
 -}
 adopt :: AnimalWithType -> Either String AdoptedAnimal
-adopt animal = case animal
+adopt animal = case animal of
   (AnimalWithType age name Cat) -> if age < 5 && head name /= 'D' Right (AdoptedAnimal animal) else Left "Can't adopt cat"
   (AnimalWithType age _ Dog) -> if age > 1 Right (AdoptedAnimal animal) else Left "Can't adopt dog"
   (AnimalWithType _ name Duck) -> if name == "Daisy" Right (AdoptedAnimal animal) else Left "Quack"
@@ -517,7 +517,7 @@ empty = Empty
 
 -- Возвращает True, если дерево - это лист
 isLeaf :: Tree a -> Bool
-isLeaf t = case t
+isLeaf t = case t of
  Empty -> True
  _ -> False
 
@@ -527,19 +527,19 @@ isNode = not . isLeaf
 
 -- Если дерево это нода, то возвращает текущее значение ноды
 getValue :: Tree a -> Maybe a
-getValue t = case t
+getValue t = case t of
   Empty -> Nothing
   (Node (t) (_) (_)) -> Just t
 
 -- Если дерево это нода, то возвращает левое поддерево
 getLeft :: Tree a -> Maybe (Tree a)
-getLeft t = case t
+getLeft t = case t of
   Empty -> Nothing
   (Node _ l _) = Just l
 
 -- Если дерево это нода, то возвращает правое поддерево
 getRight :: Tree a -> Maybe (Tree a)
-getRight t = case t
+getRight t = case t of
   Empty -> Nothing
   (Node _ _ r) = Just r
 
