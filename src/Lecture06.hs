@@ -130,6 +130,11 @@ module Lecture06 where
   если нет, то докажите это (напишите, почему)
 
   *Решение*
+
+  'x x' - аппликация
+  по правилам вывода можем утверждать, что 'x : T1 -> T2' и 'x : T1' должны следовать из предложений в Г
+  получаем, что T1 -> T2 == T1, что невозможно, ведь тип не может быть собственным подвыражением
+
 -}
 -- </Задачи для самостоятельного решения>
 
@@ -326,7 +331,7 @@ module Lecture06 where
   Убедитесь, что selfApp работает. Приведите терм `selfApp id` в нормальную форму
   и запишите все шаги β-редукции ->β.
 
-  selfApp id = ... ->β ...
+  selfApp id = (λx:∀X.X->X.x [∀X.X->X] x) id ->β ...
 -}
 -- </Задачи для самостоятельного решения>
 
@@ -578,16 +583,16 @@ module Lecture06 where
 -}
 
 f :: [a] -> Int
-f = error "not implemented"
+f x = length x
 
 g :: (a -> b)->[a]->[b]
-g = error "not implemented"
+g = map
 
 q :: a -> a -> a
-q x y = error "not implemented"
+q x y = x
 
 p :: (a -> b) -> (b -> c) -> (a -> c)
-p f g = error "not implemented"
+p f g = g . f
 
 {-
   Крестики-нолики Чёрча.
@@ -624,7 +629,10 @@ createRow x y z = \case
   Third -> z
 
 createField :: Row -> Row -> Row -> Field
-createField x y z = error "not implemented"
+createField x y z = \case
+  First -> x
+  Second -> y
+  Third -> z
 
 -- Чтобы было с чего начинать проверять ваши функции
 emptyField :: Field
@@ -633,17 +641,35 @@ emptyField = createField emptyLine emptyLine emptyLine
     emptyLine = createRow Empty Empty Empty
 
 setCellInRow :: Row -> Index -> Value -> Row
-setCellInRow r i v = error "not implemented"
+setCellInRow r i v = \ind -> if ind == i then v else r ind
 
 -- Возвращает новое игровое поле, если клетку можно занять.
 -- Возвращает ошибку, если место занято.
 setCell :: Field -> Index -> Index -> Value -> Either String Field
-setCell field i j v = error "not implemented"
+setCell field i j v = if (field i j) /= Empty
+  then Left ("There is '" ++ (show $ field i j) ++ "' on " ++ show i ++ " " ++ show j)
+  else Right (\rowInd -> if i /= rowInd then field rowInd else setCellInRow (field i) j v)
 
 data GameState = InProgress | Draw | XsWon | OsWon deriving (Eq, Show)
 
 getGameState :: Field -> GameState
-getGameState field = error "not implemented"
+getGameState field 
+  | isWin Cross  = XsWon
+  | isWin Zero = OsWon
+  | isInProgress = InProgress
+  | True = Draw
+  where
+    indexes = [First, Second, Third]
+    fullEqual p xs = all (== p) xs
+
+    isHorEqual r p = fullEqual p (map (\x -> field r x) indexes)
+    isVertEqual c p = fullEqual p (map (\x -> field x c) indexes)
+    isDiagonalEqual p = fullEqual p (map (\x -> field x x) indexes) || fullEqual p [field First Third, field Second Second, field Third First]
+    isWin p = isDiagonalEqual p || any (\x -> x == True) (map (\x -> (isHorEqual x p || isVertEqual x p)) indexes)
+
+    allCells = map (\r -> map (\c -> (field r c)) indexes) indexes
+
+    isInProgress = any(Empty==) (allCells >>= id)
 
 -- </Задачи для самостоятельного решения>
 
