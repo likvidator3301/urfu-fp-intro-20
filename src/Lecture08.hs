@@ -385,7 +385,6 @@ emptySet = Set.intersection evenSet oddSet
   https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html?highlight=ambiguous#extension-AllowAmbiguousTypes
 -}
 
-
 class IntArray a where
   replicateFor :: Int -> Int -> a   
   (#) :: a -> Int -> Int
@@ -409,7 +408,6 @@ instance IntArray (Array Int Int) where
   update arr i x = arr // [(i, x)]
   (#) arr i      = arr ! i
   replicateFor n x = array (0, n) [(i, x) | i <- [0..n]]
-
 
 -- Сортирует массив целых неотрицательных чисел по возрастанию
 countingSort :: forall a. IntArray a => [Int] -> [Int]
