@@ -41,18 +41,22 @@ import qualified Data.IntMap as Map
 data Stack a = Stack [a] deriving (Eq, Show)
 
 createStack :: Stack a
-createStack = error "not implemented"
+createStack = Stack[]
 
 -- Обратите внимание, что все структуры данных неизменяемые (immutable). Значит, если операция
 -- предполагает изменение структуры, то она просто должна возвращать новую уже изменённую версию.
 push :: Stack a -> a -> Stack a
-push stack x = error "not implemented"
+push (Stack xs) x = Stack(x : xs)
 
 pop :: Stack a -> Maybe (Stack a)
-pop stack = error "not implemented"
+pop stack = case stack of
+  (Stack []) -> Nothing
+  (Stack (_ : xs)) -> Just(Stack(xs))
 
 peek :: Stack a -> Maybe a
-peek stack = error "not implemented"
+peek stack = case stack of
+  (Stack []) -> Nothing
+  (Stack (x : _)) -> Just x
 
 -- </Задачи для самостоятельного решения>
 
@@ -170,17 +174,22 @@ dequeue' (q:qs) = (q, qs)             -- возвращаем (элемент, �
 data Queue a = Queue [a] [a] deriving (Eq, Show)
 
 createQueue :: Queue a
-createQueue = error "not implemented"
+createQueue = Queue [] []
 
 enqueue :: Queue a -> a -> Queue a
-enqueue queue x = error "not implemented"
+enqueue (Queue l r) x = Queue (x : l) r
 
 -- если очередь пустая возвращает ошибку
 dequeue :: Queue a -> (a, Queue a)
-dequeue queue = error "not implemented"
+dequeue queue = case queue of 
+  (Queue [] []) -> error "queue is empty"
+  (Queue l []) -> dequeue (Queue [] $ reverse l)
+  (Queue l (x : r)) -> (x, Queue l r)
 
 isEmpty :: Queue a -> Bool
-isEmpty queue = error "not implemented"
+isEmpty queue = case queue of 
+  (Queue [] []) -> True
+  _ -> False
 
 -- </Задачи для самостоятельного решения>
 
@@ -376,9 +385,39 @@ emptySet = Set.intersection evenSet oddSet
   https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html?highlight=ambiguous#extension-AllowAmbiguousTypes
 -}
 
+
+class IntArray a where
+  replicateFor :: Int -> Int -> a   
+  (#) :: a -> Int -> Int
+  update :: a -> Int -> Int -> a
+  createZeroes :: Int -> a
+  incrementAt :: a -> Int -> a
+  incrementAt arr i = update arr i (((#) arr i) + 1)
+  createZeroes n = replicateFor n 0
+
+instance IntArray [Int] where
+  replicateFor n x = replicate n x
+  (#) arr i      = arr !! i
+  update arr i x = take i arr ++ (x : drop (i + 1) arr)
+
+instance IntArray (Map.IntMap Int) where
+  replicateFor n x = Map.fromList [(i, x) | i <- [0..n]]
+  (#) arr i      = arr Map.! i
+  update arr i x = Map.insert i x arr
+
+instance IntArray (Array Int Int) where
+  update arr i x = arr // [(i, x)]
+  (#) arr i      = arr ! i
+  replicateFor n x = array (0, n) [(i, x) | i <- [0..n]]
+
+
 -- Сортирует массив целых неотрицательных чисел по возрастанию
 countingSort :: forall a. IntArray a => [Int] -> [Int]
-countingSort = error "not implemented"
+countingSort intArray = case intArray of
+  [] -> []
+  arr -> foldl (\r i -> r ++ (replicateFor ((#) counts i) i)) [] [0..(max - 1)] where
+      max = maximum arr + 1
+      counts = foldl (\xs -> \i -> incrementAt xs i) (createZeroes max :: a) arr
 
 {-
   Tак можно запустить функцию сортировки с использованием конкретной реализацией массива:
@@ -403,3 +442,4 @@ sorted = countingSort @[Int] [2,2,2,3,3,3,1,1,1]
   - "A Hash Array Mapped Trie for C++"          Phil Nash     https://www.youtube.com/watch?v=imrSQ82dYns
   - "Hash Array Mapped Trie"                    Андрей Гейн   https://www.youtube.com/watch?v=aERxzsp_49U
 -}
+
