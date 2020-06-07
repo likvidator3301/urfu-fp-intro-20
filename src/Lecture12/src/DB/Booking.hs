@@ -9,9 +9,10 @@ import Database.SQLite.Simple.ToField
 import Database.SQLite.Simple.FromField
 import Servant.API
 import GHC.Generics
+import Control.Monad.IO.Class
 
 import DB.MovieSession
-import DB.Seat
+import DB.Seat (SeatId)
 import DB.Internal
 
 {-
@@ -56,8 +57,39 @@ instance FromJSON Booking
   Если оно существует и прошло меньше 10 минут от создания, то бронирование
   проходит успешно, иначе необходимо вернуть сообщение об ошибке в JSON формате.
 -}
-tryBook
-  :: DBMonad m
-  => BookingId
-  -> m Bool
-tryBook = undefined
+tenDaysTimeout :: NominalDiffTime
+tenDaysTimeout = 600
+
+compareTime :: UTCTime -> IO Bool
+compareTime createdAt = do
+  currTime <- getCurrentTime
+  let diff = (diffUTCTime createdAt currTime)
+  return $ diff < tenDaysTimeout
+
+tryBook :: DBMonad m => Booking -> m (Maybe String)
+tryBook booking = do
+  if isPreliminary booking then do
+    isTimePassed <- liftIO $ compareTime (createdAt booking)
+    if (isTimePassed)
+      then do
+        payBooking (bookingId booking) (seatId booking)
+        return Nothing
+      else do
+        deleteBooking (bookingId booking)
+        return $ Just "Not found"
+  else
+    return $ Just "Already paid"
+
+deleteBooking  :: DBMonad m => BookingId -> m ()
+deleteBooking bookingId = runSQL $ \conn ->
+  execute conn "DELETE FROM bookings WHERE id = ?" (bookingId)
+
+payBooking :: DBMonad m => BookingId -> SeatId -> m ()
+payBooking bookingId seatId = runSQL $ \conn -> do
+  execute conn "UPDATE bookings SET is_preliminary = false WHERE id = ?" bookingId
+  execute conn "UPDATE seats SET available = false WHERE id = ?" seatId
+
+getBookings :: DBMonad m => BookingId -> m [Booking]
+getBookings bookingId = runSQL $ \conn ->
+  query conn "SELECT * from bookings where id = ?" bookingId
+
